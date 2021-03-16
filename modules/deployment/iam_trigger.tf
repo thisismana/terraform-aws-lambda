@@ -17,16 +17,29 @@ data "aws_iam_policy_document" "trigger-assume-role-policy" {
 }
 
 resource "aws_iam_policy" "trigger" {
-  name   = "${var.function_name}--trigger-${data.aws_region.current.name}"
-  policy = data.aws_iam_policy_document.trigger-permissions.json
+  name = "${var.function_name}--trigger-${data.aws_region.current.name}"
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Action = [
+          "codepipeline:StartPipelineExecution",
+        ]
+        Effect   = "Allow"
+        Resource = aws_codepipeline.this.arn
+      },
+    ]
+    }
+  )
+  //  policy = data.aws_iam_policy_document.trigger-permissions.json
 }
 
-data "aws_iam_policy_document" "trigger-permissions" {
-  statement {
-    actions   = ["codepipeline:StartPipelineExecution"]
-    resources = [aws_codepipeline.this.arn]
-  }
-}
+//data "aws_iam_policy_document" "trigger-permissions" {
+//  statement {
+//    actions   = ["codepipeline:StartPipelineExecution"]
+//    resources = [aws_codepipeline.this.arn]
+//  }
+//}
 
 resource "aws_iam_role_policy_attachment" "trigger" {
   policy_arn = aws_iam_policy.trigger.arn
